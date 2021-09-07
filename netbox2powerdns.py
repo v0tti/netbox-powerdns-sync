@@ -59,12 +59,22 @@ print("----")
 
 for record in to_create:
     print("Creating", record)
-    zone.create_records([powerdns.RRSet(record[0], record[1], [(record[2], False)], comments=[powerdns.Comment("NetBox")])])
+    zone.create_records([
+                        powerdns.RRSet(record[0],
+                                       record[1],
+                                       [(record[2], False)], 
+                                       comments=[powerdns.Comment("NetBox")])
+                        ])
 
 print("----")
 
 for record in to_delete:
     print("Deleting", record)
-    zone.create_records([powerdns.RRSet(record[0], record[1], [(record[2], False)], comments=[powerdns.Comment("NetBox")])])
+    zone.delete_records([
+                        powerdns.RRSet(record[0],
+                                       record[1],
+                                       [(record[2], False)], 
+                                       comments=[powerdns.Comment("NetBox")])
+                        ])
 
 print("----")
