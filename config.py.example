@@ -1,0 +1,5 @@
+NB_URL = "https://netbox.intern.relaix.net/"
+NB_TOKEN = ""
+
+PDNS_API_URL = "http://[2a00:fe0:0:200::12]:8081/api/v1"
+PDNS_KEY = ""
