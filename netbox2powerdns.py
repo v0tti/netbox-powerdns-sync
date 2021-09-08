@@ -59,7 +59,7 @@ for reverse_zone in REVERSE_ZONES:
         if nb_ip.dns_name != "":
             ip = re.sub("/[0-9]*", "", str(nb_ip))
             reverse_pointer = ipaddress.ip_address(ip).reverse_pointer
-            host_ips.append((reverse_pointer,
+            host_ips.append((reverse_pointer+".",
                              "PTR",
                              nb_ip.dns_name+".",
                              reverse_zone["zone"]))
