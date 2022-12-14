@@ -10,7 +10,8 @@ from config import FORWARD_ZONES, REVERSE_ZONES
 
 nb = pynetbox.api(NB_URL, token=NB_TOKEN)
 
-pdns_api_client = powerdns.PDNSApiClient(api_endpoint=PDNS_API_URL, api_key=PDNS_KEY)
+pdns_api_client = powerdns.PDNSApiClient(api_endpoint=PDNS_API_URL,
+                                         api_key=PDNS_KEY)
 pdns = powerdns.PDNSEndpoint(pdns_api_client).servers[0]
 
 host_ips = []
@@ -18,11 +19,11 @@ record_ips = []
 for forward_zone in FORWARD_ZONES:
     forward_zone_canonical = forward_zone+"."
 
-    # get IPs with DNS name ending in forward_zone from NetBox
+    # Get IPs with DNS name ending in forward_zone from NetBox.
     nb_ips = nb.ipam.ip_addresses.filter(dns_name__iew=forward_zone)
 
-    # assemble list with tupels containing the canonical name, the record type
-    # and the IP address without the subnet from NetBox IPs
+    # Assemble list with tupels containing the canonical name, the record type
+    # and the IP address without the subnet from NetBox IPs.
     for nb_ip in nb_ips:
         if nb_ip.family.value == 6:
             type = "AAAA"
@@ -33,13 +34,12 @@ for forward_zone in FORWARD_ZONES:
                          re.sub("/[0-9]*", "", str(nb_ip)),
                          forward_zone_canonical))
 
-    # get zone forward_zone_canonical form PowerDNS
+    # Get zone forward_zone_canonical form PowerDNS.
     zone = pdns.get_zone(forward_zone_canonical)
 
-    # assemble list with tupels containing the canonical name, the record type,
+    # Assemble list with tupels containing the canonical name, the record type,
     # the IP address and forward_zone_canonical without the subnet from
-    # PowerDNS zone records with the
-    # comment "NetBox"
+    # PowerDNS zone records with the comment "NetBox".
     for record in zone.records:
         for comment in record["comments"]:
             if comment["content"] == "NetBox":  
@@ -50,11 +50,11 @@ for forward_zone in FORWARD_ZONES:
                                        forward_zone_canonical))
 
 for reverse_zone in REVERSE_ZONES:
-    # get IPs within the prefix from NetBox
+    # Get IPs within the prefix from NetBox.
     nb_ips = nb.ipam.ip_addresses.filter(parent=reverse_zone["prefix"])
 
-    # assemble list with tupels containing the canonical name, the record type
-    # and the IP address without the subnet from NetBox IPs
+    # Assemble list with tupels containing the canonical name, the record type
+    # and the IP address without the subnet from NetBox IPs.
     for nb_ip in nb_ips:
         if nb_ip.dns_name != "":
             ip = re.sub("/[0-9]*", "", str(nb_ip))
@@ -64,13 +64,12 @@ for reverse_zone in REVERSE_ZONES:
                              nb_ip.dns_name+".",
                              reverse_zone["zone"]))
 
-    # get zone forward_zone_canonical form PowerDNS
+    # Get zone forward_zone_canonical form PowerDNS.
     zone = pdns.get_zone(reverse_zone["zone"])
 
-    # assemble list with tupels containing the canonical name, the record type,
+    # Assemble list with tupels containing the canonical name, the record type,
     # the IP address and forward_zone_canonical without the subnet from
-    # PowerDNS zone records with the
-    # comment "NetBox"
+    # PowerDNS zone records with the comment "NetBox".
     for record in zone.records:
         for comment in record["comments"]:
             if comment["content"] == "NetBox":
@@ -80,12 +79,12 @@ for reverse_zone in REVERSE_ZONES:
                                        ip["content"],
                                        reverse_zone["zone"]))
 
-# create set with tupels that have to be created
-# tupels from NetBox without tupels that already exists in PowerDNS
+# Create set with tupels that have to be created.
+# Tupels from NetBox without tupels that already exists in PowerDNS.
 to_create = set(host_ips)-set(record_ips)
 
-# create set with tupels that have to be deleted
-# tupels from PowerDNS without tupels that are documented in NetBox
+# Create set with tupels that have to be deleted.
+# Tupels from PowerDNS without tupels that are documented in NetBox.
 to_delete = set(record_ips)-set(host_ips)
 
 print("----")
