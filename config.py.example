@@ -11,3 +11,4 @@ DRY_RUN = True
 
 SOURCE_IP = True
 SOURCE_DEVICE = True
+SOURCE_VM = True

@@ -9,7 +9,7 @@ import pynetbox
 
 from config import NB_URL, NB_TOKEN, PDNS_API_URL, PDNS_KEY
 from config import FORWARD_ZONES, REVERSE_ZONES, DRY_RUN
-from config import SOURCE_DEVICE, SOURCE_IP
+from config import SOURCE_DEVICE, SOURCE_IP, SOURCE_VM
 
 nb = pynetbox.api(NB_URL, token=NB_TOKEN)
 
@@ -64,6 +64,18 @@ for forward_zone in FORWARD_ZONES:
                     forward_zone_canonical
                 ))
 
+    if SOURCE_VM:
+        for d in nb.virtualization.virtual_machines.filter(name__ic=forward_zone):
+            if d.primary_ip4:
+                host_ips.append((d.name+".",
+                    "A",
+                    re.sub("/[0-9]*", "", str(d.primary_ip4)),
+                    forward_zone_canonical))
+            if d.primary_ip6:
+                host_ips.append((d.name+".",
+                    "AAAA",
+                    re.sub("/[0-9]*", "", str(d.primary_ip6)),
+                    forward_zone_canonical))
     # get zone forward_zone_canonical form PowerDNS
     zone = pdns.get_zone(forward_zone_canonical)
 
