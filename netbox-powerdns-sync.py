@@ -47,7 +47,7 @@ for forward_zone in FORWARD_ZONES:
         nb_devices = nb.dcim.devices.filter(name__iew=forward_zone)
 
         # assemble list with tupels containing the canonical name, the record
-        # type and the IP address of the device without the subnet
+        # type and the IP addresses without the subnet of the device
         for nb_device in nb_devices:
             if nb_device.primary_ip4:
                 host_ips.append((
@@ -64,18 +64,30 @@ for forward_zone in FORWARD_ZONES:
                     forward_zone_canonical
                 ))
 
+    # Source VM: Create domains based on the name of VMs
     if SOURCE_VM:
-        for d in nb.virtualization.virtual_machines.filter(name__ic=forward_zone):
-            if d.primary_ip4:
-                host_ips.append((d.name+".",
+        # get VMs with name ending in forward_zone from NetBox
+        nb_vms = nb.virtualization.virtual_machines.filter(
+            name__iew=forward_zone)
+
+        # assemble a list with tupels containing the canonical name, the record
+        # type and the primary IP addresses without the subnet of the VM
+        for nb_vm in nb_vms:
+            if nb_vm.primary_ip4:
+                host_ips.append((
+                    nb_vm.name+".",
                     "A",
-                    re.sub("/[0-9]*", "", str(d.primary_ip4)),
-                    forward_zone_canonical))
-            if d.primary_ip6:
-                host_ips.append((d.name+".",
+                    re.sub("/[0-9]*", "", str(nb_vm.primary_ip4)),
+                    forward_zone_canonical
+                ))
+            if nb_vm.primary_ip6:
+                host_ips.append((
+                    nb_vm.name+".",
                     "AAAA",
-                    re.sub("/[0-9]*", "", str(d.primary_ip6)),
-                    forward_zone_canonical))
+                    re.sub("/[0-9]*", "", str(nb_vm.primary_ip6)),
+                    forward_zone_canonical
+                ))
+
     # get zone forward_zone_canonical form PowerDNS
     zone = pdns.get_zone(forward_zone_canonical)
 
