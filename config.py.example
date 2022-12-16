@@ -6,3 +6,9 @@ PDNS_KEY = ""
 
 FORWARD_ZONES = ["local"]
 REVERSE_ZONES = [{"zone": "10.10.10.in-addr.arpa.", "prefix": "10.10.10/24"}]
+
+DRY_RUN = True
+
+SOURCE_IP = True
+SOURCE_DEVICE = True
+SOURCE_VM = True
