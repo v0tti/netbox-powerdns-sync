@@ -95,14 +95,15 @@ for forward_zone in FORWARD_ZONES:
     # the IP address and forward_zone_canonical without the subnet from
     # PowerDNS zone records with the
     # comment "NetBox"
-    for record in zone.records:
-        for comment in record["comments"]:
-            if comment["content"] == "NetBox": 
-                for ip in record["records"]:
-                    record_ips.append((record["name"],
-                                       record["type"],
-                                       ip["content"],
-                                       forward_zone_canonical))
+    if zone:
+        for record in zone.records:
+            for comment in record["comments"]:
+                if comment["content"] == "NetBox": 
+                    for ip in record["records"]:
+                        record_ips.append((record["name"],
+                                           record["type"],
+                                           ip["content"],
+                                           forward_zone_canonical))
 
 for reverse_zone in REVERSE_ZONES:
     # get IPs within the prefix from NetBox
