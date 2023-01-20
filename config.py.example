@@ -1,8 +1,14 @@
-NB_URL = "https://netbox.intern.relaix.net/"
+NB_URL = "https://netbox.local/"
 NB_TOKEN = ""
 
-PDNS_API_URL = "http://[2a00:fe0:0:200::12]:8081/api/v1"
+PDNS_API_URL = "http://powerdns.local:8081/api/v1"
 PDNS_KEY = ""
 
-FORWARD_ZONES = ["intern.relaix.net"]
-REVERSE_ZONES = [{"zone": "12.168.192.in-addr.arpa.", "prefix": "192.168.12.0/24"}]
+FORWARD_ZONES = ["local"]
+REVERSE_ZONES = [{"zone": "10.10.10.in-addr.arpa.", "prefix": "10.10.10/24"}]
+
+DRY_RUN = True
+
+SOURCE_IP = True
+SOURCE_DEVICE = True
+SOURCE_VM = True
