@@ -106,6 +106,8 @@ for forward_zone in FORWARD_ZONES:
                                            forward_zone_canonical))
 
 for reverse_zone in REVERSE_ZONES:
+    reverse_zone_canonical = reverse_zone["zone"]+"."
+
     # get IPs within the prefix from NetBox
     nb_ips = nb.ipam.ip_addresses.filter(parent=reverse_zone["prefix"])
 
@@ -118,10 +120,10 @@ for reverse_zone in REVERSE_ZONES:
             host_ips.append((reverse_pointer+".",
                              "PTR",
                              nb_ip.dns_name+".",
-                             reverse_zone["zone"]))
+                             reverse_zone_canonical))
 
     # get zone forward_zone_canonical form PowerDNS
-    zone = pdns.get_zone(reverse_zone["zone"])
+    zone = pdns.get_zone(reverse_zone_canonical)
 
     # assemble list with tupels containing the canonical name, the record type,
     # the IP address and forward_zone_canonical without the subnet from
@@ -134,7 +136,7 @@ for reverse_zone in REVERSE_ZONES:
                     record_ips.append((record["name"],
                                        record["type"],
                                        ip["content"],
-                                       reverse_zone["zone"]))
+                                       reverse_zone_canonical))
 
 # create set with tupels that have to be created
 # tupels from NetBox without tupels that already exists in PowerDNS
