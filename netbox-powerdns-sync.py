@@ -106,7 +106,10 @@ for forward_zone in FORWARD_ZONES:
                                            forward_zone_canonical))
 
 for reverse_zone in REVERSE_ZONES:
-    reverse_zone_canonical = reverse_zone["zone"]+"."
+    if reverse_zone["zone"].endswith("."):
+        reverse_zone_canonical = reverse_zone["zone"]
+    else:
+        reverse_zone_canonical = reverse_zone["zone"]+"."
 
     # get IPs within the prefix from NetBox
     nb_ips = nb.ipam.ip_addresses.filter(parent=reverse_zone["prefix"])
