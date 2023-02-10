@@ -3,6 +3,7 @@
 import ipaddress
 import re
 import sys
+import logging
 
 import powerdns
 import pynetbox
@@ -10,6 +11,7 @@ import pynetbox
 from config import NB_URL, NB_TOKEN, PDNS_API_URL, PDNS_KEY
 from config import FORWARD_ZONES, REVERSE_ZONES, DRY_RUN
 from config import SOURCE_DEVICE, SOURCE_IP, SOURCE_VM
+from systemd.journal import JournalHandler
 
 nb = pynetbox.api(NB_URL, token=NB_TOKEN)
 
@@ -149,27 +151,31 @@ to_create = set(host_ips)-set(record_ips)
 # tupels from PowerDNS without tupels that are documented in NetBox
 to_delete = set(record_ips)-set(host_ips)
 
-print("----")
+log = logging.getLogger('netbox-powerdns-sync.py')
+log.addHandler(JournalHandler())
+log.setLevel(logging.INFO)
 
-print(len(to_create), "records to create:")
+log.info("----")
+
+log.info(str(len(to_create))  + " records to create:")
 for record in to_create:
-    print(record[0])
+    log.info(str(record[0]))
 
-print("----")
+log.info("----")
 
-print(len(to_delete), "records to delete:")
+log.info(str(len(to_delete)) + " records to delete:")
 for record in to_delete:
-    print(record[0])
+    log.info(str(record[0]))
 
-print("----")
+log.info("----")
 
 if DRY_RUN:
-    print("Skipping Create/Delete due to Dry Run")
-    print("----")
+    log.info("Skipping Create/Delete due to Dry Run")
+    log.info("----")
     sys.exit()
 
 for record in to_create:
-    print("Creating", record)
+    log.info("Creating" + str(record))
     zone = pdns.get_zone(record[3])
     zone.create_records([
                         powerdns.RRSet(
@@ -179,10 +185,10 @@ for record in to_create:
                             comments=[powerdns.Comment("NetBox")])
                         ])
 
-print("----")
+log.info("----")
 
 for record in to_delete:
-    print("Deleting", record)
+    log.info("Deleting" + str(record))
     zone = pdns.get_zone(record[3])
     zone.delete_records([
                         powerdns.RRSet(
@@ -192,4 +198,4 @@ for record in to_delete:
                             comments=[powerdns.Comment("NetBox")])
                         ])
     
-print("----")
+log.info("----")
