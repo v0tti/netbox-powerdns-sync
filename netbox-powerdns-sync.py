@@ -5,6 +5,7 @@ import ipaddress
 import logging
 import re
 import sys
+import logging
 
 from collections import Counter
 from systemd.journal import JournalHandler
