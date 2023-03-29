@@ -30,9 +30,15 @@ def get_host_ips_ip(nb, zone):
     # get IPs with DNS name ending in forward_zone from NetBox
     if PTR_ONLY_CF:
         nb_ips = nb.ipam.ip_addresses.filter(dns_name__iew=zone,
+                                             status=["active",
+                                                     "dhcp",
+                                                     "slaac"],
                                              cf_ptr_only=False)
     else:
-        nb_ips = nb.ipam.ip_addresses.filter(dns_name__iew=zone)
+        nb_ips = nb.ipam.ip_addresses.filter(dns_name__iew=zone,
+                                             status=["active",
+                                                     "dhcp",
+                                                     "slaac"])
     
     # assemble list with tupels containing the canonical name, the record
     # type and the IP address without the subnet from NetBox IPs
@@ -56,7 +62,10 @@ def get_host_ips_ip_reverse(nb, prefix, zone):
     host_ips = []
 
     # get IPs within the prefix from NetBox
-    nb_ips = nb.ipam.ip_addresses.filter(parent=prefix)
+    nb_ips = nb.ipam.ip_addresses.filter(parent=prefix,
+                                         status=["active",
+                                                 "dhcp",
+                                                 "slaac"])
     
     # assemble list with tupels containing the canonical name, the record type
     # and the IP address without the subnet from NetBox IPs
@@ -75,7 +84,11 @@ def get_host_ips_ip_reverse(nb, prefix, zone):
 def get_host_ips_device(nb, zone):
     # return list of tupels for devices
     # get devices with name ending in forward_zone from NetBox
-    nb_devices = nb.dcim.devices.filter(name__iew=zone)
+    nb_devices = nb.dcim.devices.filter(name__iew=zone,
+                                        status=["active",
+                                                "failed",
+                                                "offline",
+                                                "staged"])
 
     return get_host_ips_host(nb_devices, zone)
 
@@ -84,7 +97,11 @@ def get_host_ips_vm(nb, zone):
     # return list of tupels for VMs
     # get VMs with name ending in forward_zone from NetBox
     nb_vms = nb.virtualization.virtual_machines.filter(
-        name__iew=zone)
+        name__iew=zone,
+        status=["active",
+                "failed",
+                "offline",
+                "staged"])
 
     return get_host_ips_host(nb_vms, zone)
 
