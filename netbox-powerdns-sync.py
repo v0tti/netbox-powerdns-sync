@@ -213,10 +213,9 @@ def main():
     duplicate_records = [duplicate for duplicate, amount in
                          Counter(duplicate_records).items() if amount > 1]
     for duplicate_record in duplicate_records:
-        logger.critical(f"""Detected duplicate record from NetBox
-                        {duplicate_record[0]} of type {duplicate_record[1]}.
-                        Not continuing execution,
-                        please resolve the duplicate.""")
+        logger.critical(f"""Detected duplicate record from NetBox \
+{duplicate_record[0]} of type {duplicate_record[1]}.
+Not continuing execution. Please resolve the duplicate.""")
     if len(duplicate_records) > 0:
         sys.exit()
 
