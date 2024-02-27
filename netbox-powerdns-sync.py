@@ -194,19 +194,23 @@ def main():
         # get zone forward_zone_canonical form PowerDNS
         zone = pdns.get_zone(make_canonical(forward_zone))
     
+        if zone is None:
+            logger.critical(f"""Zone {forward_zone} not found in \
+PowerDNS. Skipping it.""")
+            continue
+
         # assemble list with tupels containing the canonical name, the record
         # type, the IP address and forward_zone_canonical without the subnet
         # from PowerDNS zone records with the
         # comment "NetBox"
-        if zone:
-            for record in zone.records:
-                for comment in record["comments"]:
-                    if comment["content"] == "NetBox": 
-                        for ip in record["records"]:
-                            record_ips.append((record["name"],
-                                               record["type"],
-                                               ip["content"],
-                                               make_canonical(forward_zone)))
+        for record in zone.records:
+            for comment in record["comments"]:
+                if comment["content"] == "NetBox": 
+                    for ip in record["records"]:
+                        record_ips.append((record["name"],
+                                           record["type"],
+                                           ip["content"],
+                                           make_canonical(forward_zone)))
     
     for reverse_zone in REVERSE_ZONES:
         host_ips += get_host_ips_ip_reverse(nb, reverse_zone["prefix"],
@@ -215,6 +219,11 @@ def main():
         # get reverse zone records form PowerDNS
         zone = pdns.get_zone(make_canonical(reverse_zone["zone"]))
     
+        if zone is None:
+            logger.critical(f"""Zone {reverse_zone["zone"]} not found in \
+PowerDNS. Skipping it.""")
+            continue
+
         # assemble list with tupels containing the canonical name, the record
         # type, the IP address and forward_zone_canonical without the subnet
         # from PowerDNS zone records with the
