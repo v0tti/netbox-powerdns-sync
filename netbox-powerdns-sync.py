@@ -43,6 +43,9 @@ def get_host_ips_ip(nb, zone):
     # assemble list with tupels containing the canonical name, the record
     # type and the IP address without the subnet from NetBox IPs
     for nb_ip in nb_ips:
+        nb_zone = nb_ip.dns_name.split(".")
+        if zone != ".".join(nb_zone[1:]):
+            continue
         if nb_ip.family.value == 6:
             type = "AAAA"
         else:
