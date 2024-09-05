@@ -131,6 +131,8 @@ def get_host_ips_host(nb_hosts, zone):
                 make_canonical(zone)
             ))
 
+    return host_ips
+
 
 def main():
     parser = argparse.ArgumentParser(
