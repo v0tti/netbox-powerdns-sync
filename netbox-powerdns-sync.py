@@ -11,7 +11,7 @@ import powerdns
 import pynetbox
 from systemd.journal import JournalHandler
 
-from config import DRY_RUN, FORWARD_ZONES, REVERSE_ZONES
+from config import DRY_RUN, FORWARD_ZONES, FORWARD_ZONES_EXCLUDE, REVERSE_ZONES
 from config import NB_TOKEN, NB_URL, PDNS_API_URL, PDNS_KEY
 from config import PTR_ONLY_CF
 from config import SOURCE_DEVICE, SOURCE_IP, SOURCE_VM
@@ -42,8 +42,14 @@ def get_host_ips_ip(nb, zone):
     # assemble list with tupels containing the canonical name, the record
     # type and the IP address without the subnet from NetBox IPs
     for nb_ip in nb_ips:
+        # we need to check if there is a more specific zone for this dns_name
         nb_zone = nb_ip.dns_name.split('.')
-        if zone != '.'.join(nb_zone[1:]):
+        nb_zone = '.'.join(nb_zone[1:])
+        most_specific_zone = ''
+        for specific_zone in (FORWARD_ZONES+FORWARD_ZONES_EXCLUDE):
+            if nb_zone.endswith(specific_zone) and len(specific_zone) > len(most_specific_zone):
+                most_specific_zone = specific_zone
+        if zone != most_specific_zone:
             continue
 
         if nb_ip.family.value == 6:

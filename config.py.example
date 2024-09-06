@@ -5,6 +5,7 @@ PDNS_API_URL = "http://powerdns.local:8081/api/v1"
 PDNS_KEY = ""
 
 FORWARD_ZONES = ["local"]
+FORWARD_ZONES_EXCLUDE = []
 REVERSE_ZONES = [{"zone": "10.10.10.in-addr.arpa.", "prefix": "10.10.10/24"}]
 
 PTR_ONLY_CF = False
