@@ -9,6 +9,7 @@ FORWARD_ZONES_EXCLUDE = []
 REVERSE_ZONES = [{"zone": "10.10.10.in-addr.arpa.", "prefix": "10.10.10/24"}]
 
 PTR_ONLY_CF = False
+EXCLUDE_CF = False
 
 DRY_RUN = True
 

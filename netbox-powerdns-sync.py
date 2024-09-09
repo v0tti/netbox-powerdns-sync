@@ -13,7 +13,7 @@ from systemd.journal import JournalHandler
 
 from config import DRY_RUN, FORWARD_ZONES, FORWARD_ZONES_EXCLUDE, REVERSE_ZONES
 from config import NB_TOKEN, NB_URL, PDNS_API_URL, PDNS_KEY
-from config import PTR_ONLY_CF
+from config import PTR_ONLY_CF, EXCLUDE_CF
 from config import SOURCE_DEVICE, SOURCE_IP, SOURCE_VM
 
 
@@ -27,17 +27,15 @@ def get_host_ips_ip(nb, zone):
     host_ips = []
 
     # get IPs with DNS name ending in forward_zone from NetBox
+    nb_filter = {
+        'dns_name__iew': zone,
+        'status': ['active', 'dhcp', 'slaac']
+    }
     if PTR_ONLY_CF:
-        nb_ips = nb.ipam.ip_addresses.filter(
-            dns_name__iew=zone,
-            status=['active', 'dhcp', 'slaac'],
-            cf_ptr_only=False
-        )
-    else:
-        nb_ips = nb.ipam.ip_addresses.filter(
-            dns_name__iew=zone,
-            status=['active', 'dhcp', 'slaac']
-        )
+        nb_filter['cf_ptr_only'] = False
+    if EXCLUDE_CF:
+        nb_filter['cf_dns_exclude'] = False
+    nb_ips = nb.ipam.ip_addresses.filter(**nb_filter)
 
     # assemble list with tupels containing the canonical name, the record
     # type and the IP address without the subnet from NetBox IPs
@@ -72,23 +70,38 @@ def get_host_ips_ip_reverse(nb, prefix, zone):
     host_ips = []
 
     # get IPs within the prefix from NetBox
-    nb_ips = nb.ipam.ip_addresses.filter(
-        parent=prefix,
-        status=['active', 'dhcp', 'slaac']
-    )
+    nb_filter = {
+        'parent': prefix,
+        'status': ['active', 'dhcp', 'slaac']
+    }
+    if EXCLUDE_CF:
+        nb_filter['cf_dns_exclude'] = False
+    nb_ips = nb.ipam.ip_addresses.filter(**nb_filter)
 
     # assemble list with tupels containing the canonical name, the record type
     # and the IP address without the subnet from NetBox IPs
     for nb_ip in nb_ips:
-        if nb_ip.dns_name != '':
-            ip = re.sub('/[0-9]*', '', str(nb_ip))
-            reverse_pointer = ipaddress.ip_address(ip).reverse_pointer
-            host_ips.append((
-                make_canonical(reverse_pointer),
-                'PTR',
-                make_canonical(nb_ip.dns_name),
-                make_canonical(zone)
-            ))
+        if nb_ip.dns_name == '':
+            continue
+        # IPv6: we need to check if there is a more specific zone for this ip
+        # this is not useful for IPv4, since we are always using /24 there
+        if nb_ip.family.value == 6:
+            nb_zone = ipaddress.ip_interface(nb_ip).network.network_address.reverse_pointer
+            most_specific_zone = ''
+            for specific_zone in REVERSE_ZONES:
+                specific_zone = specific_zone['zone']
+                if nb_zone.endswith(specific_zone) and len(specific_zone) > len(most_specific_zone):
+                    most_specific_zone = specific_zone
+            if zone != most_specific_zone:
+                continue
+        ip = re.sub('/[0-9]*', '', str(nb_ip))
+        reverse_pointer = ipaddress.ip_address(ip).reverse_pointer
+        host_ips.append((
+            make_canonical(reverse_pointer),
+            'PTR',
+            make_canonical(nb_ip.dns_name),
+            make_canonical(zone)
+        ))
 
     return host_ips
 
