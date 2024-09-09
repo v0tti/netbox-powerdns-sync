@@ -80,15 +80,27 @@ def get_host_ips_ip_reverse(nb, prefix, zone):
     # assemble list with tupels containing the canonical name, the record type
     # and the IP address without the subnet from NetBox IPs
     for nb_ip in nb_ips:
-        if nb_ip.dns_name != '':
-            ip = re.sub('/[0-9]*', '', str(nb_ip))
-            reverse_pointer = ipaddress.ip_address(ip).reverse_pointer
-            host_ips.append((
-                make_canonical(reverse_pointer),
-                'PTR',
-                make_canonical(nb_ip.dns_name),
-                make_canonical(zone)
-            ))
+        if nb_ip.dns_name == '':
+            continue
+        # IPv6: we need to check if there is a more specific zone for this ip
+        # this is not useful for IPv4, since we are always using /24 there
+        if nb_ip.family.value == 6:
+            nb_zone = ipaddress.ip_interface(nb_ip).network.network_address.reverse_pointer
+            most_specific_zone = ''
+            for specific_zone in REVERSE_ZONES:
+                specific_zone = specific_zone['zone']
+                if nb_zone.endswith(specific_zone) and len(specific_zone) > len(most_specific_zone):
+                    most_specific_zone = specific_zone
+            if zone != most_specific_zone:
+                continue
+        ip = re.sub('/[0-9]*', '', str(nb_ip))
+        reverse_pointer = ipaddress.ip_address(ip).reverse_pointer
+        host_ips.append((
+            make_canonical(reverse_pointer),
+            'PTR',
+            make_canonical(nb_ip.dns_name),
+            make_canonical(zone)
+        ))
 
     return host_ips
 
