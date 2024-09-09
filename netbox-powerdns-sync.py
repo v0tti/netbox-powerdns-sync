@@ -13,7 +13,7 @@ from systemd.journal import JournalHandler
 
 from config import DRY_RUN, FORWARD_ZONES, FORWARD_ZONES_EXCLUDE, REVERSE_ZONES
 from config import NB_TOKEN, NB_URL, PDNS_API_URL, PDNS_KEY
-from config import PTR_ONLY_CF
+from config import PTR_ONLY_CF, EXCLUDE_CF
 from config import SOURCE_DEVICE, SOURCE_IP, SOURCE_VM
 
 
@@ -27,17 +27,15 @@ def get_host_ips_ip(nb, zone):
     host_ips = []
 
     # get IPs with DNS name ending in forward_zone from NetBox
+    nb_filter = {
+        'dns_name__iew': zone,
+        'status': ['active', 'dhcp', 'slaac']
+    }
     if PTR_ONLY_CF:
-        nb_ips = nb.ipam.ip_addresses.filter(
-            dns_name__iew=zone,
-            status=['active', 'dhcp', 'slaac'],
-            cf_ptr_only=False
-        )
-    else:
-        nb_ips = nb.ipam.ip_addresses.filter(
-            dns_name__iew=zone,
-            status=['active', 'dhcp', 'slaac']
-        )
+        nb_filter['cf_ptr_only'] = False
+    if EXCLUDE_CF:
+        nb_filter['cf_dns_exclude'] = False
+    nb_ips = nb.ipam.ip_addresses.filter(**nb_filter)
 
     # assemble list with tupels containing the canonical name, the record
     # type and the IP address without the subnet from NetBox IPs
@@ -72,10 +70,13 @@ def get_host_ips_ip_reverse(nb, prefix, zone):
     host_ips = []
 
     # get IPs within the prefix from NetBox
-    nb_ips = nb.ipam.ip_addresses.filter(
-        parent=prefix,
-        status=['active', 'dhcp', 'slaac']
-    )
+    nb_filter = {
+        'parent': prefix,
+        'status': ['active', 'dhcp', 'slaac']
+    }
+    if EXCLUDE_CF:
+        nb_filter['cf_dns_exclude'] = False
+    nb_ips = nb.ipam.ip_addresses.filter(**nb_filter)
 
     # assemble list with tupels containing the canonical name, the record type
     # and the IP address without the subnet from NetBox IPs
